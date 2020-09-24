@@ -18,6 +18,14 @@ class CompiledTemplate implements TemplateInterface
         return (eval($this->compiledString))($variables);
     }
 
+    /**
+     * @return callable(array<string,mixed>):\Iterator<string>
+     */
+    public function getRenderer(): callable
+    {
+        return eval($this->compiledString);
+    }
+
     public function getCompiledString(): string
     {
         return $this->compiledString;

@@ -19,6 +19,15 @@ class FileTemplate implements TemplateInterface
         return (require $this->path)($variables);
     }
 
+    /**
+     * @return callable(array<string,mixed>):\Iterator<string>
+     */
+    public function getRenderer(): callable
+    {
+        /** @psalm-suppress UnresolvableInclude */
+        return require $this->path;
+    }
+
     public function getCompiledString(): string
     {
         $source = @file_get_contents($this->path);

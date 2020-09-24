@@ -12,5 +12,10 @@ interface TemplateInterface
      */
     public function render(array $variables): \Iterator;
 
+    /**
+     * @return callable(array<string,mixed>):\Iterator<string>
+     */
+    public function getRenderer(): callable;
+
     public function getCompiledString(): string;
 }
