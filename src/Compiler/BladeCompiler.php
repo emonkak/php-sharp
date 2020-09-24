@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Emonkak\Sharp\Compiler;
 
+use Emonkak\Sharp\CompiledTemplate;
 use Emonkak\Sharp\Loader\LoaderInterface;
+use Emonkak\Sharp\TemplateInterface;
 
 class BladeCompiler implements CompilerInterface
 {
     const FORM_PATTERN = '/{{--(.*?)--}}|{{\s*(.+?)\s*}}|{!!\s*(.+?)\s*!!}|\B@(@?\w+)(?:\s*(\(((?>[^()]+)|(?5))*\)))?/s';
 
-    public function compile(string $templateString, LoaderInterface $loader): string
+    public function compile(string $templateString, LoaderInterface $loader): TemplateInterface
     {
         $cache = [];
         $body = $this->compileBody($templateString, $loader, $cache);
-        return "return static function(\$__variables) { \$__sections = []; \$__stacks = []; extract(\$__variables, \EXTR_SKIP); $body };";
+        $compiledString = "return static function(\$__variables) { \$__sections = []; \$__stacks = []; extract(\$__variables, \EXTR_SKIP); $body };";
+        return new CompiledTemplate($compiledString);
     }
 
     private function compileBody(string $templateString, LoaderInterface $loader, array &$cache): string
@@ -50,7 +53,7 @@ class BladeCompiler implements CompilerInterface
     }
 
     /**
-     * @param array<string,string> $cache
+     * @param array<array-key,mixed> $cache
      * @param string[] $parents
      */
     private function compileForm(array $matches, LoaderInterface $loader, array &$cache, array &$parents): string
@@ -69,7 +72,7 @@ class BladeCompiler implements CompilerInterface
     }
 
     /**
-     * @param array<string,string> $cache
+     * @param array<array-key,mixed> $cache
      * @param string[] $parents
      */
     private function compileStatement(string $name, string $parameters, LoaderInterface $loader, array &$cache, array &$parents): string
@@ -126,9 +129,9 @@ class BladeCompiler implements CompilerInterface
                 $name = $this->stripParentheses($parameters);
                 return "if (isset(\$__stacks[$name])) foreach (\$__stacks[$name] as \$__stack) yield from \$__stack();";
             case 'else':
-                return "else:";
+                return 'else:';
             case 'default':
-                return "default:";
+                return 'default:';
             case 'break':
                 return 'break;';
             case 'continue':
@@ -168,10 +171,14 @@ class BladeCompiler implements CompilerInterface
      */
     private function extractForms(string $templateString): array
     {
+        /** @psalm-var int|false */
         $result = \preg_match_all(self::FORM_PATTERN, $templateString, $matches, \PREG_SET_ORDER);
         return $result !== false ? $matches : [];
     }
 
+    /**
+     * @return array{0:string,1:string}
+     */
     private function unquote(string $input): array
     {
         $result = preg_match('/^\(\s*([\'"])(.*?)\1\s*(?:,\s*(.+?))?\)$/s', $input, $matches);

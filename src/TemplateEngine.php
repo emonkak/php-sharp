@@ -7,7 +7,7 @@ namespace Emonkak\Sharp;
 use Emonkak\Sharp\Compiler\CompilerInterface;
 use Emonkak\Sharp\Loader\LoaderInterface;
 
-class InstantEngine implements TemplateEngineInterface
+class TemplateEngine implements TemplateEngineInterface
 {
     private CompilerInterface $compiler;
 
@@ -19,18 +19,24 @@ class InstantEngine implements TemplateEngineInterface
         $this->loader = $loader;
     }
 
-    /**
-     * @return callable(array<string,mixed>):\Iterator<string>
-     */
-    public function getRenderer(string $name): callable
+    public function getTemplate(string $name): TemplateInterface
     {
         $templateString = $this->loader->load($name);
-        $compiledString = $this->compiler->compile($templateString, $this->loader);
-        return eval($compiledString);
+        return $this->compiler->compile($templateString, $this->loader);
     }
 
     public function exists(string $name): bool
     {
         return $this->loader->exists($name);
+    }
+
+    public function getTimestamp(string $name): int
+    {
+        return $this->loader->getTimestamp($name);
+    }
+
+    public function withFileCache(string $cacheDirectory): TemplateEngineInterface
+    {
+        return new FileCacheEngine($this, $cacheDirectory);
     }
 }

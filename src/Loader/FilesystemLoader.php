@@ -16,19 +16,19 @@ class FilesystemLoader implements LoaderInterface
         $this->extension = $extension;
     }
 
-    public function exists(string $name): bool
-    {
-        return isset($this->templates[$name]);
-    }
-
     public function load(string $name): string
     {
         $path = $this->toPath($name);
         $templateString = @file_get_contents($path);
         if ($templateString === false) {
-            throw new \RuntimeException('Failed to load template: '. $name);
+            throw new \RuntimeException('Failed to load template: ' . $name);
         }
         return $templateString;
+    }
+
+    public function exists(string $name): bool
+    {
+        return isset($this->templates[$name]);
     }
 
     public function getTimestamp(string $name): int

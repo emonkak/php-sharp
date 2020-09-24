@@ -12,16 +12,11 @@ class InMemoryLoader implements LoaderInterface
     private array $templates;
 
     /**
-     * @param array<string,string>
+     * @param array<string,string> $templates
      */
     public function __construct(array $templates = [])
     {
         $this->templates = $templates;
-    }
-
-    public function exists(string $name): bool
-    {
-        return isset($this->templates[$name]);
     }
 
     public function load(string $name): string
@@ -29,8 +24,13 @@ class InMemoryLoader implements LoaderInterface
         return $this->templates[$name] ?? '';
     }
 
+    public function exists(string $name): bool
+    {
+        return isset($this->templates[$name]);
+    }
+
     public function getTimestamp(string $name): int
     {
-        return \PHP_INT_MAX;
+        return -1;
     }
 }

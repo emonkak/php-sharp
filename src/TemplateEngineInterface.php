@@ -6,10 +6,9 @@ namespace Emonkak\Sharp;
 
 interface TemplateEngineInterface
 {
-    /**
-     * @return callable(array<string,mixed>):\Iterator<string>
-     */
-    public function getRenderer(string $name): callable;
+    public function getTemplate(string $name): TemplateInterface;
 
     public function exists(string $name): bool;
+
+    public function getTimestamp(string $name): int;
 }
