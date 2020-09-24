@@ -1,0 +1,30 @@
+{
+    "name": "emonkak/php-sharp",
+    "description": "A template engine that render as streaming",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Shota Nozaki",
+            "email": "emonkak@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.16",
+        "php-coveralls/php-coveralls": "^2.2",
+        "phpunit/phpunit": "^7.0",
+        "vimeo/psalm": "^3.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "Emonkak\\Sharp\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Emonkak\\Sharp\\Tests\\": "tests/"
+        }
+    }
+}

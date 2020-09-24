@@ -1,0 +1,12 @@
+{
+    "require": {
+        "phpbench/phpbench": "^0.17",
+        "illuminate/view": "^8.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Emonkak\\Sharp\\": "../src/",
+            "Emonkak\\Sharp\\Benchmarks\\": "src/"
+        }
+    }
+}
