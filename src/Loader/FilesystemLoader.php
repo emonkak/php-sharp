@@ -6,39 +6,64 @@ namespace Emonkak\Sharp\Loader;
 
 class FilesystemLoader implements LoaderInterface
 {
-    private string $directory;
+    /**
+     * @var string[]
+     */
+    private array $directories;
 
     private string $extension;
 
-    public function __construct(string $directory, string $extension = '.blade.php')
+    /**
+     * @param string[] $directories
+     */
+    public function __construct(array $directories, string $extension = '.blade.php')
     {
-        $this->directory = $directory;
+        $this->directories = $directories;
         $this->extension = $extension;
     }
 
     public function load(string $name): string
     {
-        $path = $this->toPath($name);
-        $templateString = @file_get_contents($path);
-        if ($templateString === false) {
-            throw new \RuntimeException('Failed to load template: ' . $name);
+        foreach ($this->directories as $directory) {
+            $path = $directory . $name . $this->extension;
+
+            if (file_exists($path)) {
+                $templateString = @file_get_contents($path);
+
+                if ($templateString === false) {
+                    throw new \RuntimeException('Failed to load template: ' . $path);
+                }
+
+                return $templateString;
+            }
         }
-        return $templateString;
+        throw new \RuntimeException('Template not found: ' . $name);
     }
 
     public function exists(string $name): bool
     {
-        return isset($this->templates[$name]);
+        foreach ($this->directories as $directory) {
+            if (file_exists($path)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function getTimestamp(string $name): int
     {
-        $path = $this->toPath($name);
-        $timestamp = filemtime($path);
-        return $timestamp !== false ? $timestamp : -1;
+        foreach ($this->directories as $directory) {
+            $path = $directory . $name . $this->extension;
+
+            if (file_exists($path)) {
+                $timestamp = filemtime($path);
+                return $timestamp !== false ? $timestamp : -1;
+            }
+        }
+        return -1;
     }
 
-    private function toPath(string $name): string
+    private function toPath(string $directory, string $name): string
     {
         return $this->directory . $name . $this->extension;
     }

@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Emonkak\Sharp;
 
+/**
+ * @template T
+ */
 interface TemplateInterface
 {
     /**
      * @param array<string,mixed> $variables
-     * @return \Iterator<string>
+     * @return T
      */
-    public function render(array $variables): \Iterator;
+    public function render(array $variables);
 
     /**
-     * @return callable(array<string,mixed>):\Iterator<string>
+     * @return callable(array<string,mixed>):T
      */
     public function getRenderer(): callable;
 

@@ -1,5 +1,5 @@
 {
-    "name": "emonkak/php-sharp",
+    "name": "emonkak/sharp",
     "description": "A template engine that render as streaming",
     "type": "library",
     "authors": [

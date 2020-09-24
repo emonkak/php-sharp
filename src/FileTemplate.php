@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Emonkak\Sharp;
 
+/**
+ * @template T
+ * @implements TemplateInterface<T>
+ */
 class FileTemplate implements TemplateInterface
 {
     private string $path;
@@ -13,14 +17,17 @@ class FileTemplate implements TemplateInterface
         $this->path = $path;
     }
 
-    public function render(array $variables): \Iterator
+    /**
+     * @return T
+     */
+    public function render(array $variables)
     {
         /** @psalm-suppress UnresolvableInclude */
         return (require $this->path)($variables);
     }
 
     /**
-     * @return callable(array<string,mixed>):\Iterator<string>
+     * @return callable(array<string,mixed>):T
      */
     public function getRenderer(): callable
     {

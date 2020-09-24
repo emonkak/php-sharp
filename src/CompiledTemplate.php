@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Emonkak\Sharp;
 
+/**
+ * @template T
+ * @implements TemplateInterface<T>
+ */
 class CompiledTemplate implements TemplateInterface
 {
     private string $compiledString;
@@ -13,13 +17,16 @@ class CompiledTemplate implements TemplateInterface
         $this->compiledString = $compiledString;
     }
 
-    public function render(array $variables): \Iterator
+    /**
+     * @return T
+     */
+    public function render(array $variables)
     {
         return (eval($this->compiledString))($variables);
     }
 
     /**
-     * @return callable(array<string,mixed>):\Iterator<string>
+     * @return callable(array<string,mixed>):T
      */
     public function getRenderer(): callable
     {

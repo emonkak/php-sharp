@@ -8,17 +8,30 @@ use Emonkak\Sharp\CompiledTemplate;
 use Emonkak\Sharp\Loader\LoaderInterface;
 use Emonkak\Sharp\TemplateInterface;
 
-class BladeCompiler implements CompilerInterface
+/**
+ * @template T
+ * @implements CompilerInterface<T>
+ */
+abstract class AbstractBladeCompiler implements CompilerInterface
 {
     const FORM_PATTERN = '/{{--(.*?)--}}|{{\s*(.+?)\s*}}|{!!\s*(.+?)\s*!!}|\B@(@?\w+)(?:\s*(\(((?>[^()]+)|(?5))*\)))?/s';
 
+    /**
+     * @return TemplateInterface<T>
+     */
     public function compile(string $templateString, LoaderInterface $loader): TemplateInterface
     {
         $cache = [];
         $body = $this->compileBody($templateString, $loader, $cache);
-        $compiledString = "return static function(\$__variables) { \$__sections = []; \$__stacks = []; extract(\$__variables, \EXTR_SKIP); $body };";
-        return new CompiledTemplate($compiledString);
+        $wrappedBody = $this->wrapBody($body);
+        return new CompiledTemplate($wrappedBody);
     }
+
+    abstract protected function wrapBody(string $body): string;
+
+    abstract protected function yield(string $expression): string;
+
+    abstract protected function yieldFrom(string $expression): string;
 
     private function compileBody(string $templateString, LoaderInterface $loader, array &$cache): string
     {
@@ -49,7 +62,7 @@ class BladeCompiler implements CompilerInterface
         if ($constantString === '') {
             return '';
         }
-        return 'yield ' . var_export($constantString, true) . ';' . \PHP_EOL;
+        return $this->yield(var_export($constantString, true)) . PHP_EOL;
     }
 
     /**
@@ -59,13 +72,13 @@ class BladeCompiler implements CompilerInterface
     private function compileForm(array $matches, LoaderInterface $loader, array &$cache, array &$parents): string
     {
         if (isset($matches[4])) {  // Statement
-            return $this->compileStatement($matches[4], $matches[5] ?? '', $loader, $cache, $parents) . \PHP_EOL;
+            return $this->compileStatement($matches[4], $matches[5] ?? '', $loader, $cache, $parents) . PHP_EOL;
         }
         if (isset($matches[3])) {  // Unescaped Data
-            return 'yield ' . $matches[3] . ';' . \PHP_EOL;
+            return $this->yield($matches[3]) . PHP_EOL;
         }
         if (isset($matches[2])) {  // Escaped Data
-            return 'yield \htmlspecialchars(' . $matches[2] . ', \ENT_QUOTES, "UTF-8", false);' . \PHP_EOL;
+            return $this->yield('htmlspecialchars(' . $matches[2] . ', ENT_QUOTES, "UTF-8", false)') . PHP_EOL;
         }
         // Comment
         return '';
@@ -99,7 +112,7 @@ class BladeCompiler implements CompilerInterface
                 $templateString = $loader->load($path);
                 $body = $this->compileBody($templateString, $loader, $cache);
                 if ($variables !== '') {
-                    $body = "extract($variables, \EXTR_SKIP);" . PHP_EOL . $body;
+                    $body = "extract($variables, EXTR_SKIP);" . PHP_EOL . $body;
                 }
                 $cache[$path] = $body;
                 return $body;
@@ -115,19 +128,21 @@ class BladeCompiler implements CompilerInterface
                 return '';
             case 'section':
                 $name = $this->stripParentheses($parameters);
-                return "\$__sections[$name] = function() use (\$__variables, \$__sections, \$__stacks) { extract(\$__variables, \EXTR_SKIP);";
+                $captureVariables = $this->captureVariables();
+                return "\$__sections[$name] = function() use ($captureVariables) { extract(\$__variables, EXTR_SKIP);";
             case 'push':
                 $name = $this->stripParentheses($parameters);
-                return "\$__stacks[$name][] = function() use (\$__variables, \$__sections, \$__stacks) { extract(\$__variables, \EXTR_SKIP);";
+                $captureVariables = $this->captureVariables();
+                return "\$__stacks[$name][] = function() use ($captureVariables) { extract(\$__variables, EXTR_SKIP);";
             case 'hasSection':
                 $name = $this->stripParentheses($parameters);
                 return "if (isset(\$__sections[$name])):";
             case 'yield':
                 $name = $this->stripParentheses($parameters);
-                return "yield from \$__sections[$name]();";
+                return $this->yieldFrom("\$__sections[$name]()");
             case 'stack':
                 $name = $this->stripParentheses($parameters);
-                return "if (isset(\$__stacks[$name])) foreach (\$__stacks[$name] as \$__stack) yield from \$__stack();";
+                return "if (isset(\$__stacks[$name])) foreach (\$__stacks[$name] as \$__stack) " . $this->yieldFrom('$__stack()');
             case 'else':
                 return 'else:';
             case 'default':
@@ -151,7 +166,7 @@ class BladeCompiler implements CompilerInterface
                 return '};';
             default:
                 if (isset($name[0]) && $name[0] === '@') {
-                    return 'yield ' . var_export($name . $parameters, true) . ';';
+                    return $this->yield(var_export($name . $parameters, true));
                 }
                 throw new \RuntimeException('Unknown statement: @' . $name . $parameters);
         }
@@ -162,7 +177,7 @@ class BladeCompiler implements CompilerInterface
      */
     private function extractConstants(string $templateString): array
     {
-        $constants = \preg_split(self::FORM_PATTERN, $templateString);
+        $constants = preg_split(self::FORM_PATTERN, $templateString);
         return $constants !== false ? $constants : [];
     }
 
@@ -172,7 +187,7 @@ class BladeCompiler implements CompilerInterface
     private function extractForms(string $templateString): array
     {
         /** @psalm-var int|false */
-        $result = \preg_match_all(self::FORM_PATTERN, $templateString, $matches, \PREG_SET_ORDER);
+        $result = preg_match_all(self::FORM_PATTERN, $templateString, $matches, PREG_SET_ORDER);
         return $result !== false ? $matches : [];
     }
 
