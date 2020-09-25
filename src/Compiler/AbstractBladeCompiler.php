@@ -29,6 +29,8 @@ abstract class AbstractBladeCompiler implements CompilerInterface
 
     abstract protected function wrapBody(string $body): string;
 
+    abstract protected function captureVariables(): string;
+
     abstract protected function yield(string $expression): string;
 
     abstract protected function yieldFrom(string $expression): string;
@@ -62,7 +64,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
         if ($constantString === '') {
             return '';
         }
-        return $this->yield(var_export($constantString, true)) . PHP_EOL;
+        return $this->yield(var_export($constantString, true)) . "\n";
     }
 
     /**
@@ -72,13 +74,13 @@ abstract class AbstractBladeCompiler implements CompilerInterface
     private function compileForm(array $matches, LoaderInterface $loader, array &$cache, array &$parents): string
     {
         if (isset($matches[4])) {  // Statement
-            return $this->compileStatement($matches[4], $matches[5] ?? '', $loader, $cache, $parents) . PHP_EOL;
+            return $this->compileStatement($matches[4], $matches[5] ?? '', $loader, $cache, $parents) . "\n";
         }
         if (isset($matches[3])) {  // Unescaped Data
-            return $this->yield($matches[3]) . PHP_EOL;
+            return $this->yield($matches[3]) . "\n";
         }
         if (isset($matches[2])) {  // Escaped Data
-            return $this->yield('htmlspecialchars(' . $matches[2] . ', ENT_QUOTES, "UTF-8", false)') . PHP_EOL;
+            return $this->yield("htmlspecialchars($matches[2], ENT_QUOTES, 'UTF-8', false)") . "\n";
         }
         // Comment
         return '';
@@ -112,7 +114,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
                 $templateString = $loader->load($path);
                 $body = $this->compileBody($templateString, $loader, $cache);
                 if ($variables !== '') {
-                    $body = "extract($variables, EXTR_SKIP);" . PHP_EOL . $body;
+                    $body = "extract($variables, EXTR_SKIP); $body";
                 }
                 $cache[$path] = $body;
                 return $body;

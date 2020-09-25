@@ -55,6 +55,6 @@ class SharpBench
      */
     public function benchRenderStream()
     {
-        $stream = $this->engine->getTemplate('list')->render(['size' => 10000]);
+        $this->engine->getTemplate('list')->render(['size' => 10000]);
     }
 }

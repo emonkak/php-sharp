@@ -43,7 +43,7 @@ class FilesystemLoader implements LoaderInterface
     public function exists(string $name): bool
     {
         foreach ($this->directories as $directory) {
-            if (file_exists($path)) {
+            if (file_exists($directory)) {
                 return true;
             }
         }
@@ -61,10 +61,5 @@ class FilesystemLoader implements LoaderInterface
             }
         }
         return -1;
-    }
-
-    private function toPath(string $directory, string $name): string
-    {
-        return $this->directory . $name . $this->extension;
     }
 }
