@@ -16,6 +16,11 @@ abstract class AbstractBladeCompiler implements CompilerInterface
 {
     const FORM_PATTERN = '/{{--(.*?)--}}|{{\s*(.+?)\s*}}|{!!\s*(.+?)\s*!!}|\B@(@?\w+)(?:\s*(\(((?>[^()]+)|(?5))*\)))?/s';
 
+    public function generateKey(string $name): string
+    {
+        return sha1(static::class . ':' . $name);
+    }
+
     /**
      * @return TemplateInterface<T>
      */
@@ -23,19 +28,13 @@ abstract class AbstractBladeCompiler implements CompilerInterface
     {
         $cache = [];
         $body = $this->compileBody($templateString, $loader, $cache);
-        $wrappedBody = $this->wrapBody($body);
-        return new CompiledTemplate($wrappedBody);
+        $source = $this->compileSource($body);
+        return new CompiledTemplate($source);
     }
 
-    abstract protected function wrapBody(string $body): string;
+    abstract protected function compileSource(string $body): string;
 
-    abstract protected function captureVariables(): string;
-
-    abstract protected function yield(string $expression): string;
-
-    abstract protected function yieldFrom(string $expression): string;
-
-    private function compileBody(string $templateString, LoaderInterface $loader, array &$cache): string
+    protected function compileBody(string $templateString, LoaderInterface $loader, array &$cache): string
     {
         $constants = $this->extractConstants($templateString);
         $forms = $this->extractForms($templateString);
@@ -59,28 +58,35 @@ abstract class AbstractBladeCompiler implements CompilerInterface
         return $body;
     }
 
-    private function compileConstants(string $constantString): string
+    protected function compileConstants(string $constantString): string
     {
         if ($constantString === '') {
             return '';
         }
-        return $this->yield(var_export($constantString, true)) . "\n";
+        return $this->compileEcho(var_export($constantString, true)) . "\n";
     }
 
     /**
      * @param array<array-key,mixed> $cache
      * @param string[] $parents
      */
-    private function compileForm(array $matches, LoaderInterface $loader, array &$cache, array &$parents): string
+    protected function compileForm(array $matches, LoaderInterface $loader, array &$cache, array &$parents): string
     {
         if (isset($matches[4])) {  // Statement
-            return $this->compileStatement($matches[4], $matches[5] ?? '', $loader, $cache, $parents) . "\n";
+            $name = $matches[4];
+            $parameters = $matches[5] ?? '';
+            if (isset($name[0]) && $name[0] === '@') {
+                return $this->compileEcho(var_export($name . $parameters, true));
+            }
+            return $this->compileStatement($name, $parameters, $loader, $cache, $parents) . "\n";
         }
         if (isset($matches[3])) {  // Unescaped Data
-            return $this->yield($matches[3]) . "\n";
+            $expression = $matches[3];
+            return $this->compileEcho($expression) . "\n";
         }
         if (isset($matches[2])) {  // Escaped Data
-            return $this->yield("htmlspecialchars($matches[2], ENT_QUOTES, 'UTF-8', false)") . "\n";
+            $expression = $matches[2];
+            return $this->compileEcho("htmlspecialchars($expression, ENT_QUOTES, 'UTF-8', false)") . "\n";
         }
         // Comment
         return '';
@@ -90,7 +96,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
      * @param array<array-key,mixed> $cache
      * @param string[] $parents
      */
-    private function compileStatement(string $name, string $parameters, LoaderInterface $loader, array &$cache, array &$parents): string
+    protected function compileStatement(string $name, string $parameters, LoaderInterface $loader, array &$cache, array &$parents): string
     {
         switch ($name) {
             case 'if':
@@ -114,7 +120,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
                 $templateString = $loader->load($path);
                 $body = $this->compileBody($templateString, $loader, $cache);
                 if ($variables !== '') {
-                    $body = "extract($variables, EXTR_SKIP); $body";
+                    $body = "extract($variables, EXTR_SKIP | EXTR_REFS); $body";
                 }
                 $cache[$path] = $body;
                 return $body;
@@ -130,21 +136,19 @@ abstract class AbstractBladeCompiler implements CompilerInterface
                 return '';
             case 'section':
                 $name = $this->stripParentheses($parameters);
-                $captureVariables = $this->captureVariables();
-                return "\$__sections[$name] = function() use ($captureVariables) { extract(\$__variables, EXTR_SKIP);";
+                return "\$__sections[$name] = function() use (\$__variables) { extract(\$__variables, EXTR_SKIP | EXTR_REFS);";
             case 'push':
                 $name = $this->stripParentheses($parameters);
-                $captureVariables = $this->captureVariables();
-                return "\$__stacks[$name][] = function() use ($captureVariables) { extract(\$__variables, EXTR_SKIP);";
+                return "\$__stacks[$name][] = function() use (\$__variables) { extract(\$__variables, EXTR_SKIP | EXTR_REFS);";
             case 'hasSection':
                 $name = $this->stripParentheses($parameters);
                 return "if (isset(\$__sections[$name])):";
             case 'yield':
                 $name = $this->stripParentheses($parameters);
-                return $this->yieldFrom("\$__sections[$name]()");
+                return $this->compileYield("\$__sections[$name]()");
             case 'stack':
                 $name = $this->stripParentheses($parameters);
-                return "if (isset(\$__stacks[$name])) foreach (\$__stacks[$name] as \$__stack) " . $this->yieldFrom('$__stack()');
+                return "if (isset(\$__stacks[$name])) foreach (\$__stacks[$name] as \$__stack) " . $this->compileYield('$__stack()');
             case 'else':
                 return 'else:';
             case 'default':
@@ -167,12 +171,13 @@ abstract class AbstractBladeCompiler implements CompilerInterface
             case 'endpush':
                 return '};';
             default:
-                if (isset($name[0]) && $name[0] === '@') {
-                    return $this->yield(var_export($name . $parameters, true));
-                }
                 throw new \RuntimeException('Unknown statement: @' . $name . $parameters);
         }
     }
+
+    abstract protected function compileEcho(string $expression): string;
+
+    abstract protected function compileYield(string $expression): string;
 
     /**
      * @return string[]
@@ -205,7 +210,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
         return ['', ''];
     }
 
-    public function stripParentheses(string $input): string
+    private function stripParentheses(string $input): string
     {
         if (isset($input[0]) && $input[0] === '(') {
             return substr($input, 1, -1);

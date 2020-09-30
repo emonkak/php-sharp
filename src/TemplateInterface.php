@@ -20,5 +20,5 @@ interface TemplateInterface
      */
     public function getRenderer(): callable;
 
-    public function getCompiledString(): string;
+    public function getSource(): string;
 }

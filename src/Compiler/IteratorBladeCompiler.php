@@ -9,22 +9,17 @@ namespace Emonkak\Sharp\Compiler;
  */
 class IteratorBladeCompiler extends AbstractBladeCompiler
 {
-    protected function wrapBody(string $body): string
+    protected function compileSource(string $body): string
     {
-        return "return static function(\$__variables) { \$__sections = []; \$__stacks = []; extract(\$__variables, EXTR_SKIP); $body };";
+        return "<?php return static function(\$__variables) { \$__variables += ['__sections' => [], '__stacks' => []]; extract(\$__variables, EXTR_SKIP | EXTR_REFS); $body };";
     }
 
-    protected function captureVariables(): string
-    {
-        return "\$__variables, \$__sections, \$__stacks";
-    }
-
-    protected function yield(string $expression): string
+    protected function compileEcho(string $expression): string
     {
         return "yield $expression;";
     }
 
-    protected function yieldFrom(string $expression): string
+    protected function compileYield(string $expression): string
     {
         return "yield from $expression;";
     }

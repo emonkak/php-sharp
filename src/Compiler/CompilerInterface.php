@@ -12,6 +12,8 @@ use Emonkak\Sharp\TemplateInterface;
  */
 interface CompilerInterface
 {
+    public function generateKey(string $name): string;
+
     /**
      * @return TemplateInterface<T>
      */

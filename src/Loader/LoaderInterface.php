@@ -10,5 +10,5 @@ interface LoaderInterface
 
     public function exists(string $name): bool;
 
-    public function getTimestamp(string $name): int;
+    public function isFresh(string $name, int $timestamp): bool;
 }

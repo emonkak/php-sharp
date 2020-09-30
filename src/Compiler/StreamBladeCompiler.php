@@ -9,22 +9,17 @@ namespace Emonkak\Sharp\Compiler;
  */
 class StreamBladeCompiler extends AbstractBladeCompiler
 {
-    protected function wrapBody(string $body): string
+    protected function compileSource(string $body): string
     {
-        return "return static function(\$__variables) { \$__sections = []; \$__stacks = []; \$__stream = fopen('php://memory', 'r+'); extract(\$__variables, EXTR_SKIP); $body; return \$__stream; };";
+        return "<?php return static function(\$__variables) { \$__variables += ['__sections' => [], '__stacks' => [], '__stream' => fopen('php://memory', 'r+')]; extract(\$__variables, EXTR_SKIP | EXTR_REFS); $body; return \$__stream; };";
     }
 
-    protected function captureVariables(): string
-    {
-        return "\$__variables, \$__sections, \$__stacks, \$__stream";
-    }
-
-    protected function yield(string $expression): string
+    protected function compileEcho(string $expression): string
     {
         return "fwrite(\$__stream, $expression);";
     }
 
-    protected function yieldFrom(string $expression): string
+    protected function compileYield(string $expression): string
     {
         return $expression . ';';
     }

@@ -29,8 +29,8 @@ class InMemoryLoader implements LoaderInterface
         return isset($this->templates[$name]);
     }
 
-    public function getTimestamp(string $name): int
+    public function isFresh(string $name, int $timestamp): bool
     {
-        return -1;
+        return true;
     }
 }

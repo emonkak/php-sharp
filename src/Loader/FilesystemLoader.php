@@ -9,57 +9,76 @@ class FilesystemLoader implements LoaderInterface
     /**
      * @var string[]
      */
-    private array $directories;
+    private array $templateDirectories;
 
     private string $extension;
 
     /**
-     * @param string[] $directories
+     * @param string[] $templateDirectories
      */
-    public function __construct(array $directories, string $extension = '.blade.php')
+    public function __construct(array $templateDirectories, string $extension = '.blade.php')
     {
-        $this->directories = $directories;
+        $this->templateDirectories = $templateDirectories;
         $this->extension = $extension;
     }
 
     public function load(string $name): string
     {
-        foreach ($this->directories as $directory) {
-            $path = $directory . $name . $this->extension;
-
-            if (file_exists($path)) {
-                $templateString = @file_get_contents($path);
-
-                if ($templateString === false) {
-                    throw new \RuntimeException('Failed to load template: ' . $path);
-                }
-
-                return $templateString;
-            }
+        $path = $this->findTemplate($name);
+        if ($path === null) {
+            throw new \RuntimeException('Template file does not exist: ' . $name);
         }
-        throw new \RuntimeException('Template not found: ' . $name);
+
+        $templateString = @file_get_contents($path);
+        if ($templateString === false) {
+            throw new \RuntimeException('Failed to load template: ' . $path);
+        }
+
+        return $templateString;
     }
 
     public function exists(string $name): bool
     {
-        foreach ($this->directories as $directory) {
-            if (file_exists($directory)) {
-                return true;
-            }
-        }
-        return false;
+        return $this->findTemplate($name) !== null;
     }
 
     public function getTimestamp(string $name): int
     {
-        foreach ($this->directories as $directory) {
-            $path = $directory . $name . $this->extension;
+        $path = $this->findTemplate($name);
+        if ($path === null) {
+            return -1;
+        }
+
+        $timestamp = filemtime($path);
+        if ($timestamp === false) {
+            return -1;
+        }
+
+        return $timestamp;
+    }
+
+    public function isFresh(string $name, int $timestamp): bool
+    {
+        $path = $this->findTemplate($name);
+        if ($path === null) {
+            return false;
+        }
+        $templateTimestamp = filemtime($path);
+        if ($templateTimestamp === false) {
+            return false;
+        }
+        return $templateTimestamp < $timestamp;
+    }
+
+    private function findTemplate(string $name): ?string
+    {
+        foreach ($this->templateDirectories as $templateDirectory) {
+            $path = $templateDirectory . $name . $this->extension;
 
             if (file_exists($path)) {
-                $timestamp = filemtime($path);
-                return $timestamp !== false ? $timestamp : -1;
+                return $path;
             }
         }
-        return -1;
+        return null;
     }
 }

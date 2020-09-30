@@ -11,21 +11,23 @@ use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\Engines\EngineResolver;
 use Illuminate\View\Factory;
 use Illuminate\View\FileViewFinder;
+use org\bovigo\vfs\vfsStream;
+use org\bovigo\vfs\vfsStreamWrapper;
 
 /**
  * @BeforeMethods({"setUp"})
- * @AfterMethods({"tearDown"})
  */
 class BladeBench
 {
-    use TemporaryDirectoryTrait;
-
     private Factory $factory;
 
     public function setUp()
     {
+        vfsStream::setup();
+        $root = vfsStreamWrapper::getRoot();
+        $cacheDirectory = vfsStream::url($root->getName() . '/');
+
         $filesystem = new Filesystem();
-        $cacheDirectory = $this->createTemporaryDirectory() . '/';
         $engines = new EngineResolver();
         $engines->register('blade', static function() use ($filesystem, $cacheDirectory) {
             $compiler = new BladeCompiler($filesystem, $cacheDirectory);
@@ -37,13 +39,11 @@ class BladeBench
         $this->factory = new Factory($engines, $finder, $events);
     }
 
-    public function tearDown()
+    public function benchRender()
     {
-        $this->disposeTemporaryDirectories();
-    }
-
-    public function benchList()
-    {
-        $this->factory->make('list', ['size' => 10000])->render();
+        $result = $this->factory->make('list')->render();
+        $output = fopen('/dev/null', 'w');
+        fwrite($output, $result);
+        fclose($output);
     }
 }

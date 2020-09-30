@@ -18,6 +18,7 @@ class FileTemplate implements TemplateInterface
     }
 
     /**
+     * @param array<string,mixed> $variables
      * @return T
      */
     public function render(array $variables)
@@ -35,15 +36,8 @@ class FileTemplate implements TemplateInterface
         return require $this->path;
     }
 
-    public function getCompiledString(): string
+    public function getSource(): string
     {
-        $source = @file_get_contents($this->path);
-        if ($source === false) {
-            return '';
-        }
-        if (substr($source, 0, 5) === '<?php') {
-            $source = ltrim(substr($source, 5));
-        }
-        return $source;
+        return file_get_contents($this->path);
     }
 }

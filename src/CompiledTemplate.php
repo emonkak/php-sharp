@@ -10,19 +10,20 @@ namespace Emonkak\Sharp;
  */
 class CompiledTemplate implements TemplateInterface
 {
-    private string $compiledString;
+    private string $source;
 
-    public function __construct(string $compiledString)
+    public function __construct(string $source)
     {
-        $this->compiledString = $compiledString;
+        $this->source = $source;
     }
 
     /**
+     * @param array<string,mixed> $variables
      * @return T
      */
     public function render(array $variables)
     {
-        return (eval($this->compiledString))($variables);
+        return (eval('?>' . $this->source))($variables);
     }
 
     /**
@@ -30,11 +31,11 @@ class CompiledTemplate implements TemplateInterface
      */
     public function getRenderer(): callable
     {
-        return eval($this->compiledString);
+        return eval('?>' . $this->source);
     }
 
-    public function getCompiledString(): string
+    public function getSource(): string
     {
-        return $this->compiledString;
+        return $this->source;
     }
 }
