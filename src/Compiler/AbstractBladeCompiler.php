@@ -63,7 +63,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
         if ($constantString === '') {
             return '';
         }
-        return $this->compileEcho(var_export($constantString, true)) . "\n";
+        return $this->compileEcho(var_export($constantString, true));
     }
 
     /**
@@ -76,17 +76,17 @@ abstract class AbstractBladeCompiler implements CompilerInterface
             $name = $matches[4];
             $parameters = $matches[5] ?? '';
             if (isset($name[0]) && $name[0] === '@') {
-                return $this->compileEcho(var_export($name . $parameters, true));
+                return $this->compileConstants($name . $parameters);
             }
-            return $this->compileStatement($name, $parameters, $loader, $cache, $parents) . "\n";
+            return $this->compileStatement($name, $parameters, $loader, $cache, $parents);
         }
         if (isset($matches[3])) {  // Unescaped Data
             $expression = $matches[3];
-            return $this->compileEcho($expression) . "\n";
+            return $this->compileEcho($expression);
         }
         if (isset($matches[2])) {  // Escaped Data
             $expression = $matches[2];
-            return $this->compileEcho("htmlspecialchars($expression, ENT_QUOTES, 'UTF-8', false)") . "\n";
+            return $this->compileEcho("htmlspecialchars($expression, ENT_QUOTES, 'UTF-8', false)");
         }
         // Comment
         return '';
