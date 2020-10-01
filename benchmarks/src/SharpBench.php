@@ -15,6 +15,8 @@ use org\bovigo\vfs\vfsStreamWrapper;
 
 class SharpBench
 {
+    use SizesProvider;
+
     private TemplateFactory $factory;
 
     public function setUpIteratorFactory(): void
@@ -55,10 +57,11 @@ class SharpBench
 
     /**
      * @BeforeMethods({"setUpIteratorFactory"})
+     * @ParamProviders({"provideSizes"})
      */
-    public function benchRenderIterator(): void
+    public function benchRenderIterator($params): void
     {
-        $result = $this->factory->getTemplate('list')->render([]);
+        $result = $this->factory->getTemplate('list')->render(['size' => $params['size']]);
         $output = fopen('/dev/null', 'w');
 
         foreach ($result as $chunk) {
@@ -70,10 +73,11 @@ class SharpBench
 
     /**
      * @BeforeMethods({"setUpStreamFactory"})
+     * @ParamProviders({"provideSizes"})
      */
-    public function benchRenderStream(): void
+    public function benchRenderStream($params): void
     {
-        $input = $this->factory->getTemplate('list')->render([]);
+        $input = $this->factory->getTemplate('list')->render(['size' => $params['size']]);
         $output = fopen('/dev/null', 'w');
 
         rewind($input);
@@ -89,11 +93,12 @@ class SharpBench
 
     /**
      * @BeforeMethods({"setUpPhpFactory"})
+     * @ParamProviders({"provideSizes"})
      */
-    public function benchRenderPhp(): void
+    public function benchRenderPhp($params): void
     {
         ob_start();
-        $this->factory->getTemplate('list')->render([]);
+        $this->factory->getTemplate('list')->render(['size' => $params['size']]);
         $contents = ob_get_clean();
         $output = fopen('/dev/null', 'w');
         fwrite($output, $contents);

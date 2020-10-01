@@ -19,6 +19,8 @@ use org\bovigo\vfs\vfsStreamWrapper;
  */
 class BladeBench
 {
+    use SizesProvider;
+
     private Factory $factory;
 
     public function setUp()
@@ -39,9 +41,12 @@ class BladeBench
         $this->factory = new Factory($engines, $finder, $events);
     }
 
-    public function benchRender()
+    /**
+     * @ParamProviders({"provideSizes"})
+     */
+    public function benchRender($params)
     {
-        $result = $this->factory->make('list')->render();
+        $result = $this->factory->make('list', ['size' => $params['size']])->render();
         $output = fopen('/dev/null', 'w');
         fwrite($output, $result);
         fclose($output);
