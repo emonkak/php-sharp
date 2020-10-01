@@ -38,7 +38,7 @@ class TemplateFactory
     public function getTemplate(string $name): TemplateInterface
     {
         $key = $this->compiler->generateKey($name);
-        $template = $this->getCompiledTemplate($key);
+        $template = $this->getCompiledTemplate($name, $key);
 
         if ($template === null) {
             $templateString = $this->loader->load($name);
@@ -52,14 +52,14 @@ class TemplateFactory
     /**
      * @return ?TemplateInterface<T>
      */
-    private function getCompiledTemplate(string $key): ?TemplateInterface
+    private function getCompiledTemplate(string $name, string $key): ?TemplateInterface
     {
         if (!$this->cache->exists($key)) {
             return null;
         }
 
         $timestamp = $this->cache->getTimestamp($key);
-        if (!$this->loader->isFresh($key, $timestamp)) {
+        if (!$this->loader->isFresh($name, $timestamp)) {
             return null;
         }
 
