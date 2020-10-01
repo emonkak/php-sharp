@@ -2,7 +2,8 @@
     "require": {
         "phpbench/phpbench": "^0.17",
         "illuminate/view": "^8.6",
-        "mikey179/vfsstream": "^1.6"
+        "mikey179/vfsstream": "^1.6",
+        "twig/twig": "^3.0"
     },
     "autoload": {
         "psr-4": {
