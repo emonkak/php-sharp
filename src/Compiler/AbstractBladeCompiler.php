@@ -14,7 +14,7 @@ use Emonkak\Sharp\TemplateInterface;
  */
 abstract class AbstractBladeCompiler implements CompilerInterface
 {
-    const FORM_PATTERN = '/{{--(.*?)--}}|{{\s*(.+?)\s*}}|{!!\s*(.+?)\s*!!}|\B@(@?\w+)(?:\s*(\(((?>[^()]+)|(?5))*\)))?/s';
+    const FORM_PATTERN = '/{{--(.*?)--}}|{{\s*(.+?)\s*}}|{!!\s*(.+?)\s*!!}|\B@(@?\w+)(?:\s*(\((?:(?>[^()]+)|(?5))*\)))?(?: *\n)?/s';
 
     public function generateKey(string $name): string
     {
@@ -76,7 +76,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
             $name = $matches[4];
             $parameters = $matches[5] ?? '';
             if (isset($name[0]) && $name[0] === '@') {
-                return $this->compileConstants($name . $parameters);
+                return $this->compileConstants($matches[0]);
             }
             return $this->compileStatement($name, $parameters, $loader, $cache, $parents);
         }
