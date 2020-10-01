@@ -13,7 +13,7 @@ class StringBladeCompiler extends AbstractBladeCompiler
 {
     protected function compileSource(string $body): string
     {
-        return "<?php return static function(\$__variables) { \$__variables += ['__sections' => [], '__stacks' => [], '__contents' => '']; extract(\$__variables, EXTR_SKIP | EXTR_REFS); $body; return \$__contents; };";
+        return "<?php return static function(\$__variables) { \$__variables += ['__sections' => [], '__stacks' => [], '__contents' => '']; extract(\$__variables, EXTR_SKIP | EXTR_REFS); $body return \$__contents; };";
     }
 
     protected function compileEcho(string $expression): string

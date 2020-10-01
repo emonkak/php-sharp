@@ -58,14 +58,6 @@ abstract class AbstractBladeCompiler implements CompilerInterface
         return $body;
     }
 
-    protected function compileConstants(string $constantString): string
-    {
-        if ($constantString === '') {
-            return '';
-        }
-        return $this->compileEcho(var_export($constantString, true));
-    }
-
     /**
      * @param array<array-key,mixed> $cache
      * @param string[] $parents
@@ -173,6 +165,14 @@ abstract class AbstractBladeCompiler implements CompilerInterface
             default:
                 throw new \RuntimeException('Unknown statement: @' . $name . $parameters);
         }
+    }
+
+    protected function compileConstants(string $constantString): string
+    {
+        if ($constantString === '') {
+            return '';
+        }
+        return $this->compileEcho(var_export($constantString, true));
     }
 
     abstract protected function compileEcho(string $expression): string;

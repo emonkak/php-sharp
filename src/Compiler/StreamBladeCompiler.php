@@ -13,7 +13,7 @@ class StreamBladeCompiler extends AbstractBladeCompiler
 {
     protected function compileSource(string $body): string
     {
-        return "<?php return static function(\$__variables) { \$__variables += ['__sections' => [], '__stacks' => [], '__stream' => fopen('php://memory', 'r+')]; extract(\$__variables, EXTR_SKIP | EXTR_REFS); $body; return \$__stream; };";
+        return "<?php return static function(\$__variables) { \$__variables += ['__sections' => [], '__stacks' => [], '__stream' => fopen('php://memory', 'r+')]; extract(\$__variables, EXTR_SKIP | EXTR_REFS); $body return \$__stream; };";
     }
 
     protected function compileStatement(string $name, string $parameters, LoaderInterface $loader, array &$cache, array &$parents): string
