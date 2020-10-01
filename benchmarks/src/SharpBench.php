@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Emonkak\Sharp\Benchmarks;
 
 use Emonkak\Sharp\Cache\FilesystemCache;
+use Emonkak\Sharp\Compiler\CompilerInterface;
 use Emonkak\Sharp\Compiler\IteratorBladeCompiler;
 use Emonkak\Sharp\Compiler\PhpBladeCompiler;
 use Emonkak\Sharp\Compiler\StreamBladeCompiler;
+use Emonkak\Sharp\Compiler\StringBladeCompiler;
 use Emonkak\Sharp\Loader\FilesystemLoader;
 use Emonkak\Sharp\TemplateFactory;
 use org\bovigo\vfs\vfsStream;
@@ -19,44 +21,32 @@ class SharpBench
 
     private TemplateFactory $factory;
 
-    public function setUpIteratorFactory(): void
+    public function setUpIteratorCompilerFactory(): void
     {
-        vfsStream::setup();
-        $root = vfsStreamWrapper::getRoot();
-        $cacheDirectory = vfsStream::url($root->getName() . '/');
-
         $compiler = new IteratorBladeCompiler();
-        $loader = new FilesystemLoader([__DIR__ . '/']);
-        $cache = new FilesystemCache($cacheDirectory);
-        $this->factory = new TemplateFactory($compiler, $loader, $cache);
+        $this->factory = $this->createTemplateFactory($compiler);
     }
 
-    public function setUpStreamFactory(): void
+    public function setUpStreamCompilerFactory(): void
     {
-        vfsStream::setup();
-        $root = vfsStreamWrapper::getRoot();
-        $cacheDirectory = vfsStream::url($root->getName() . '/');
-
         $compiler = new StreamBladeCompiler();
-        $loader = new FilesystemLoader([__DIR__ . '/']);
-        $cache = new FilesystemCache($cacheDirectory);
-        $this->factory = new TemplateFactory($compiler, $loader, $cache);
+        $this->factory = $this->createTemplateFactory($compiler);
     }
 
-    public function setUpPhpFactory(): void
+    public function setUpPhpCompilerFactory(): void
     {
-        vfsStream::setup();
-        $root = vfsStreamWrapper::getRoot();
-        $cacheDirectory = vfsStream::url($root->getName() . '/');
-
         $compiler = new PhpBladeCompiler();
-        $loader = new FilesystemLoader([__DIR__ . '/']);
-        $cache = new FilesystemCache($cacheDirectory);
-        $this->factory = new TemplateFactory($compiler, $loader, $cache);
+        $this->factory = $this->createTemplateFactory($compiler);
+    }
+
+    public function setUpStringCompilerFactory(): void
+    {
+        $compiler = new StringBladeCompiler();
+        $this->factory = $this->createTemplateFactory($compiler);
     }
 
     /**
-     * @BeforeMethods({"setUpIteratorFactory"})
+     * @BeforeMethods({"setUpIteratorCompilerFactory"})
      * @ParamProviders({"provideSizes"})
      */
     public function benchRenderIterator($params): void
@@ -72,7 +62,7 @@ class SharpBench
     }
 
     /**
-     * @BeforeMethods({"setUpStreamFactory"})
+     * @BeforeMethods({"setUpStreamCompilerFactory"})
      * @ParamProviders({"provideSizes"})
      */
     public function benchRenderStream($params): void
@@ -92,7 +82,7 @@ class SharpBench
     }
 
     /**
-     * @BeforeMethods({"setUpPhpFactory"})
+     * @BeforeMethods({"setUpPhpCompilerFactory"})
      * @ParamProviders({"provideSizes"})
      */
     public function benchRenderPhp($params): void
@@ -102,5 +92,27 @@ class SharpBench
         $contents = ob_get_clean();
         $output = fopen('/dev/null', 'w');
         fwrite($output, $contents);
+    }
+
+    /**
+     * @BeforeMethods({"setUpStringCompilerFactory"})
+     * @ParamProviders({"provideSizes"})
+     */
+    public function benchRenderString($params): void
+    {
+        $result = $this->factory->getTemplate('list')->render(['size' => $params['size']]);
+        $output = fopen('/dev/null', 'w');
+        fwrite($output, $result);
+    }
+
+    private function createTemplateFactory(CompilerInterface $compiler): TemplateFactory
+    {
+        vfsStream::setup();
+        $root = vfsStreamWrapper::getRoot();
+        $cacheDirectory = vfsStream::url($root->getName() . '/');
+
+        $loader = new FilesystemLoader([__DIR__ . '/']);
+        $cache = new FilesystemCache($cacheDirectory);
+        return new TemplateFactory($compiler, $loader, $cache);
     }
 }
