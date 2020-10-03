@@ -36,7 +36,7 @@ class IteratorBladeCompiler extends AbstractBladeCompiler
         }
         $expression = var_export($constantString, true);
         $length = strlen($constantString);
-        return "if (\$__bufferSize < $this->chunkSize) { \$__buffer .= $expression; \$__bufferSize += $length; } else { yield \$__buffer; \$__buffer = ''; \$__bufferSize = 0; }\n";
+        return "\$__buffer .= $expression; \$__bufferSize += $length; if (\$__bufferSize >= $this->chunkSize) { yield \$__buffer; \$__buffer = ''; \$__bufferSize = 0; }\n";
     }
 
     protected function compileEcho(string $expression): string

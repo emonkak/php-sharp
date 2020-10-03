@@ -92,15 +92,15 @@ abstract class AbstractBladeCompiler implements CompilerInterface
     {
         switch ($name) {
             case 'if':
-                return "if $parameters:";
+                return "if $parameters {";
             case 'elseif':
-                return "elseif $parameters:";
+                return "} elseif $parameters {";
             case 'for':
-                return "for $parameters:";
+                return "for $parameters {";
             case 'foreach':
-                return "foreach $parameters:";
+                return "foreach $parameters {";
             case 'switch':
-                return "switch $parameters:";
+                return "switch $parameters {";
             case 'case':
                 $expression = $this->stripParentheses($parameters);
                 return "case $expression:";
@@ -136,15 +136,15 @@ abstract class AbstractBladeCompiler implements CompilerInterface
                 return "\$__stacks[$name][] = function() use (\$__variables) { extract(\$__variables, EXTR_SKIP | EXTR_REFS);";
             case 'hasSection':
                 $name = $this->stripParentheses($parameters);
-                return "if (isset(\$__sections[$name])):";
+                return "if (isset(\$__sections[$name])) {";
             case 'yield':
                 $name = $this->stripParentheses($parameters);
-                return "if (isset(\$__sections[$name])) " . $this->compileYield("\$__sections[$name]();");
+                return "if (isset(\$__sections[$name])) {" . $this->compileYield("\$__sections[$name]();") . '}';
             case 'stack':
                 $name = $this->stripParentheses($parameters);
-                return "if (isset(\$__stacks[$name])) foreach (\$__stacks[$name] as \$__stack) " . $this->compileYield('$__stack()');
+                return "if (isset(\$__stacks[$name])) { foreach (\$__stacks[$name] as \$__stack) { " . $this->compileYield('$__stack()') . '} }';
             case 'else':
-                return 'else:';
+                return '} else {';
             case 'default':
                 return 'default:';
             case 'break':
@@ -152,15 +152,10 @@ abstract class AbstractBladeCompiler implements CompilerInterface
             case 'continue':
                 return 'continue;';
             case 'endif':
-                return 'endif;';
             case 'endfor':
-                return 'endfor;';
             case 'endforeach':
-                return 'endforeach;';
             case 'endwhile':
-                return 'endwhile;';
             case 'endswitch':
-                return 'endswitch;';
             case 'endsection':
             case 'endpush':
                 return '};';
