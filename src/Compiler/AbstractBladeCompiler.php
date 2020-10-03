@@ -107,14 +107,15 @@ abstract class AbstractBladeCompiler implements CompilerInterface
             case 'include':
                 list($path, $variables) = $this->unquote($parameters);
                 if (isset($cache[$path])) {
-                    return $cache[$path];
+                    $body = $cache[$path];
+                } else {
+                    $templateString = $loader->load($path);
+                    $body = $this->compileBody($templateString, $loader, $cache);
+                    $cache[$path] = $body;
                 }
-                $templateString = $loader->load($path);
-                $body = $this->compileBody($templateString, $loader, $cache);
                 if ($variables !== '') {
-                    $body = "extract($variables, EXTR_SKIP | EXTR_REFS); $body";
+                    $body = $this->compileExtract($variables) . ' ' . $body;
                 }
-                $cache[$path] = $body;
                 return $body;
             case 'extends':
                 list($path) = $this->unquote($parameters);
@@ -173,6 +174,11 @@ abstract class AbstractBladeCompiler implements CompilerInterface
             return '';
         }
         return $this->compileEcho(var_export($constantString, true));
+    }
+
+    protected function compileExtract(string $variables): string
+    {
+        return "extract($variables, EXTR_OVERWRITE | EXTR_REFS);";
     }
 
     abstract protected function compileEcho(string $expression): string;
