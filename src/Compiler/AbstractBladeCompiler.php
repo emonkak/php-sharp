@@ -137,7 +137,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
                 return "if (isset(\$__sections[$name])):";
             case 'yield':
                 $name = $this->stripParentheses($parameters);
-                return $this->compileYield("\$__sections[$name]()");
+                return "if (isset(\$__sections[$name])) " . $this->compileYield("\$__sections[$name]();");
             case 'stack':
                 $name = $this->stripParentheses($parameters);
                 return "if (isset(\$__stacks[$name])) foreach (\$__stacks[$name] as \$__stack) " . $this->compileYield('$__stack()');
