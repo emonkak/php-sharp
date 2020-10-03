@@ -120,12 +120,13 @@ abstract class AbstractBladeCompiler implements CompilerInterface
             case 'extends':
                 list($path) = $this->unquote($parameters);
                 if (isset($cache[$path])) {
-                    return $cache[$path];
+                    $body = $cache[$path];
+                } else {
+                    $templateString = $loader->load($path);
+                    $body = $this->compileBody($templateString, $loader, $cache);
+                    $cache[$path] = $body;
                 }
-                $templateString = $loader->load($path);
-                $body = $this->compileBody($templateString, $loader, $cache);
                 $parents[] = $body;
-                $cache[$path] = $body;
                 return '';
             case 'section':
                 $name = $this->stripParentheses($parameters);
