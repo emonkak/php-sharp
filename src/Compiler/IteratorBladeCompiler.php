@@ -31,9 +31,6 @@ class IteratorBladeCompiler extends AbstractBladeCompiler
 
     protected function compileConstants(string $constantString): string
     {
-        if ($constantString === '') {
-            return '';
-        }
         $expression = var_export($constantString, true);
         $length = strlen($constantString);
         return "\$__buffer .= $expression; \$__bufferSize += $length; if (\$__bufferSize >= $this->chunkSize) { yield \$__buffer; \$__buffer = ''; \$__bufferSize = 0; }\n";

@@ -32,7 +32,7 @@ class PhpBladeCompiler extends AbstractBladeCompiler
 
     protected function compileConstants(string $constantString): string
     {
-        if (isset($constantString[0]) && $constantString[0] === "\n") {
+        if ($constantString[0] === "\n") {
             $constantString = "\n" . $constantString;
         }
         return $constantString;

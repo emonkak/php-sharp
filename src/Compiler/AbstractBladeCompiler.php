@@ -43,12 +43,18 @@ abstract class AbstractBladeCompiler implements CompilerInterface
         $parents = [];
 
         for ($i = 0, $l = count($forms); $i < $l; $i++) {
-            $body .= $this->compileConstants($constants[$i]);
+            $constant = $constants[$i];
+            if ($constant !== '') {
+                $body .= $this->compileConstants($constant);
+            }
             $body .= $this->compileForm($forms[$i], $loader, $cache, $parents);
         }
 
         for ($l = count($constants); $i < $l; $i++) {
-            $body .= $this->compileConstants($constants[$i]);
+            $constant = $constants[$i];
+            if ($constant !== '') {
+                $body .= $this->compileConstants($constant);
+            }
         }
 
         foreach ($parents as $parent) {
@@ -126,6 +132,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
                     $body = $this->compileBody($templateString, $loader, $cache);
                     $cache[$path] = $body;
                 }
+                /** @var string $body */
                 $parents[] = $body;
                 return '';
             case 'section':
@@ -139,7 +146,7 @@ abstract class AbstractBladeCompiler implements CompilerInterface
                 return "if (isset(\$__sections[$name])) {";
             case 'yield':
                 $name = $this->stripParentheses($parameters);
-                return "if (isset(\$__sections[$name])) {" . $this->compileYield("\$__sections[$name]();") . '}';
+                return "if (isset(\$__sections[$name])) {" . $this->compileYield("\$__sections[$name]()") . '}';
             case 'stack':
                 $name = $this->stripParentheses($parameters);
                 return "if (isset(\$__stacks[$name])) { foreach (\$__stacks[$name] as \$__stack) { " . $this->compileYield('$__stack()') . '} }';
@@ -166,9 +173,6 @@ abstract class AbstractBladeCompiler implements CompilerInterface
 
     protected function compileConstants(string $constantString): string
     {
-        if ($constantString === '') {
-            return '';
-        }
         return $this->compileEcho(var_export($constantString, true));
     }
 

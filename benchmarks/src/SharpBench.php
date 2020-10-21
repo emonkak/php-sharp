@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Emonkak\Sharp\Benchmarks;
 
 use Emonkak\Sharp\Cache\FilesystemCache;
+use Emonkak\Sharp\Compiler\ArrayBladeCompiler;
 use Emonkak\Sharp\Compiler\CompilerInterface;
 use Emonkak\Sharp\Compiler\IteratorBladeCompiler;
 use Emonkak\Sharp\Compiler\PhpBladeCompiler;
@@ -43,6 +44,28 @@ class SharpBench
     {
         $compiler = new StringBladeCompiler();
         $this->factory = $this->createTemplateFactory($compiler);
+    }
+
+    public function setUpArrayCompilerFactory(): void
+    {
+        $compiler = new ArrayBladeCompiler();
+        $this->factory = $this->createTemplateFactory($compiler);
+    }
+
+    /**
+     * @BeforeMethods({"setUpArrayCompilerFactory"})
+     * @ParamProviders({"provideSizes"})
+     */
+    public function benchRenderArray($params): void
+    {
+        $result = $this->factory->getTemplate('list')->render(['size' => $params['size']]);
+        $output = fopen('/dev/null', 'w');
+
+        foreach ($result as $chunk) {
+            fwrite($output, $chunk);
+        }
+
+        fclose($output);
     }
 
     /**
