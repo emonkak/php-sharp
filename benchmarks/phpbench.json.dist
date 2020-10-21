@@ -1,8 +1,10 @@
 {
-    "bootstrap": "vendor/autoload.php",
-    "path": "src",
-    "time_unit": "milliseconds",
-    "php_config": {
-        "memory_limit": "1G"
+    "runner.bootstrap": "vendor/autoload.php",
+    "runner.path": "src",
+    "runner.file_pattern": "*Bench.php",
+    "runner.time_unit": "milliseconds",
+    "runner.php_config": {
+        "memory_limit": "1G",
+        "xdebug.mode": "none"
     }
 }

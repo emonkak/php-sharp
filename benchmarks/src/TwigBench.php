@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Emonkak\Sharp\Benchmarks;
 
-require __DIR__ . '/../vendor/autoload.php';
-
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -14,7 +12,7 @@ use Twig\Loader\FilesystemLoader;
  */
 class TwigBench
 {
-    use SizesProvider;
+    use DataProvider;
 
     private Environment $twig;
 
@@ -27,13 +25,11 @@ class TwigBench
     }
 
     /**
-     * @ParamProviders({"provideSizes"})
+     * @ParamProviders({"provideData"})
+     * @Warmup(1)
      */
     public function benchRender($params)
     {
-        $result = $this->twig->render('list.twig', ['size' => $params['size']]);
-        $output = fopen('/dev/null', 'w');
-        fwrite($output, $result);
-        fclose($output);
+        $this->twig->render($params['template'] . '.twig', $params['data']);
     }
 }

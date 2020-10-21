@@ -1,7 +1,7 @@
 {
     "require": {
-        "phpbench/phpbench": "^0.17",
-        "illuminate/view": "^8.6",
+        "phpbench/phpbench": "^1.2",
+        "illuminate/view": "^9.44",
         "mikey179/vfsstream": "^1.6",
         "twig/twig": "^3.0"
     },

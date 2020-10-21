@@ -1,0 +1,16 @@
+<ul class="article-list">
+    {% for article in articles %}
+    <li class="article">
+        <div class="article-title">
+            <a class="article-title-anchor" href="{{ article.url }}">{{ article.title }}</a>
+        </div>
+        <div class="article-description">{{ article.description }}</div>
+        <div class="article-date">{{ article.date }}</div>
+        <ul class="article-tags">
+        {% for tag in article.tags %}
+            <li class="article-tag-item">{{ tag }}</li>
+        {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>

@@ -19,7 +19,7 @@ use org\bovigo\vfs\vfsStreamWrapper;
  */
 class BladeBench
 {
-    use SizesProvider;
+    use DataProvider;
 
     private Factory $factory;
 
@@ -37,18 +37,15 @@ class BladeBench
         });
         $finder = new FileViewFinder($filesystem, [__DIR__]);
         $events = new Dispatcher();
-        $this->cacheDirectory = $cacheDirectory;
         $this->factory = new Factory($engines, $finder, $events);
     }
 
     /**
-     * @ParamProviders({"provideSizes"})
+     * @ParamProviders({"provideData"})
+     * @Warmup(1)
      */
     public function benchRender($params)
     {
-        $result = $this->factory->make('list', ['size' => $params['size']])->render();
-        $output = fopen('/dev/null', 'w');
-        fwrite($output, $result);
-        fclose($output);
+        $this->factory->make($params['template'], $params['data'])->render();
     }
 }
