@@ -10,13 +10,13 @@ namespace Emonkak\Sharp;
 interface TemplateInterface
 {
     /**
-     * @param array<string,mixed> $variables
+     * @param array<string, mixed> $variables
      * @return T
      */
     public function render(array $variables);
 
     /**
-     * @return callable(array<string,mixed>):T
+     * @return callable(array<string, mixed>):T
      */
     public function getRenderer(): callable;
 

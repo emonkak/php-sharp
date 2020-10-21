@@ -7,12 +7,12 @@ namespace Emonkak\Sharp\Loader;
 class InMemoryLoader implements LoaderInterface
 {
     /**
-     * @var array<string,string>
+     * @var array<string, string>
      */
     private array $templates;
 
     /**
-     * @param array<string,string> $templates
+     * @param array<string, string> $templates
      */
     public function __construct(array $templates = [])
     {

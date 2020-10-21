@@ -18,7 +18,7 @@ class FileTemplate implements TemplateInterface
     }
 
     /**
-     * @param array<string,mixed> $variables
+     * @param array<string, mixed> $variables
      * @return T
      */
     public function render(array $variables)
@@ -28,7 +28,7 @@ class FileTemplate implements TemplateInterface
     }
 
     /**
-     * @return callable(array<string,mixed>):T
+     * @return callable(array<string, mixed>):T
      */
     public function getRenderer(): callable
     {
