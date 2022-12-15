@@ -35,7 +35,7 @@ class TemplateFactory
     /**
      * @return TemplateInterface<T>
      */
-    public function getTemplate(string $name): TemplateInterface
+    public function createTemplate(string $name): TemplateInterface
     {
         $key = $this->compiler->generateKey($name);
         $template = $this->loadCompiledTemplate($name, $key);
