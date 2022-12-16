@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Emonkak\Sharp\Compiler;
 
 use Emonkak\Sharp\CompiledTemplate;
-use Emonkak\Sharp\Loader\LoaderInterface;
 use Emonkak\Sharp\TemplateInterface;
 
 /**
@@ -21,17 +20,14 @@ abstract class AbstractCompiler implements CompilerInterface
         return sha1(static::class . ':' . $name);
     }
 
-    public function compile(string $templateString, LoaderInterface $loader): TemplateInterface
+    public function compile(string $templateString, CompilerContext $context): TemplateInterface
     {
-        $context = new CompilerContext();
-        $body = $this->compileBody($templateString, $loader, $context);
+        $body = $this->compileBody($templateString, $context);
         $source = $this->compileSource($body, $context);
         return new CompiledTemplate($source);
     }
 
-    abstract protected function compileSource(string $body, CompilerContext $context): string;
-
-    protected function compileBody(string $templateString, LoaderInterface $loader, CompilerContext $context): string
+    public function compileBody(string $templateString, CompilerContext $context): string
     {
         $constants = $this->extractConstants($templateString);
         $forms = $this->extractForms($templateString);
@@ -43,7 +39,7 @@ abstract class AbstractCompiler implements CompilerInterface
             if ($constant !== '') {
                 $body .= $this->compileConstant($constant, $context);
             }
-            $body .= $this->compileForm($forms[$i], $loader, $context);
+            $body .= $this->compileForm($forms[$i], $context);
         }
 
         for ($l = count($constants); $i < $l; $i++) {
@@ -53,14 +49,16 @@ abstract class AbstractCompiler implements CompilerInterface
             }
         }
 
-        foreach ($context->getParents() as $parent) {
+        foreach ($context->getAncestors() as $parent) {
             $body .= $parent;
         }
 
         return $body;
     }
 
-    protected function compileForm(array $matches, LoaderInterface $loader, CompilerContext $context): string
+    abstract protected function compileSource(string $body, CompilerContext $context): string;
+
+    protected function compileForm(array $matches, CompilerContext $context): string
     {
         if (isset($matches[4])) {  // Statement
             $name = $matches[4];
@@ -69,7 +67,7 @@ abstract class AbstractCompiler implements CompilerInterface
                 $constant = $matches[0];
                 return $this->compileConstant($constant, $context);
             }
-            return $this->compileStatement($name, $parameters, $loader, $context);
+            return $this->compileStatement($name, $parameters, $context);
         }
         if (isset($matches[3])) {  // Unescaped Data
             $expression = $matches[3];
@@ -83,7 +81,7 @@ abstract class AbstractCompiler implements CompilerInterface
         return '';
     }
 
-    protected function compileStatement(string $name, string $parameters, LoaderInterface $loader, CompilerContext $context): string
+    protected function compileStatement(string $name, string $parameters, CompilerContext $context): string
     {
         switch ($name) {
             case 'if':
@@ -101,27 +99,15 @@ abstract class AbstractCompiler implements CompilerInterface
                 return "case $expression:";
             case 'include':
                 list($path, $variables) = $this->unquote($parameters);
-                if ($context->hasPartial($path)) {
-                    $body = $context->getPartial($path);
-                } else {
-                    $templateString = $loader->load($path);
-                    $body = $this->compileBody($templateString, $loader, $context);
-                    $context->addPartial($path, $body);
-                }
+                $partial = $context->loadPartial($path, $this);
                 if ($variables !== '') {
-                    $body = $this->compileExtract($variables, $context) . ' ' . $body;
+                    $partial = $this->compileExtract($variables, $context) . ' ' . $partial;
                 }
-                return $body;
+                return $partial;
             case 'extends':
                 list($path) = $this->unquote($parameters);
-                if ($context->hasPartial($path)) {
-                    $body = $context->getPartial($path);
-                } else {
-                    $templateString = $loader->load($path);
-                    $body = $this->compileBody($templateString, $loader, $context);
-                    $context->addPartial($path, $body);
-                }
-                $context->appendParent($body);
+                $partial = $context->loadPartial($path, $this);
+                $context->appendParent($partial);
                 return '';
             case 'section':
                 $name = $this->stripParentheses($parameters);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Emonkak\Sharp;
 
 use Emonkak\Sharp\Cache\CacheInterface;
+use Emonkak\Sharp\Compiler\CompilerContext;
 use Emonkak\Sharp\Compiler\CompilerInterface;
 use Emonkak\Sharp\Loader\LoaderInterface;
 
@@ -42,7 +43,8 @@ class TemplateFactory
 
         if ($template === null) {
             $templateString = $this->loader->load($name);
-            $template = $this->compiler->compile($templateString, $this->loader);
+            $context = new CompilerContext($this->loader);
+            $template = $this->compiler->compile($templateString, $context);
             $this->cache->write($key, $template);
         }
 

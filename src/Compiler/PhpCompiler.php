@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Emonkak\Sharp\Compiler;
 
-use Emonkak\Sharp\Loader\LoaderInterface;
-
 /**
  * @extends AbstractCompiler<void>
  */
@@ -21,9 +19,9 @@ extract(\$__variables, EXTR_SKIP | EXTR_REFS);
 EOL;
     }
 
-    protected function compileStatement(string $name, string $parameters, LoaderInterface $loader, CompilerContext $context): string
+    protected function compileStatement(string $name, string $parameters, CompilerContext $context): string
     {
-        $statement = parent::compileStatement($name, $parameters, $loader, $context);
+        $statement = parent::compileStatement($name, $parameters, $context);
         if ($statement !== '' && $name !== 'include') {
             $statement = "<?php $statement ?>";
         }

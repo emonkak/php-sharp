@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Emonkak\Sharp\Compiler;
 
-use Emonkak\Sharp\Loader\LoaderInterface;
-
 /**
  * @extends AbstractCompiler<resource>
  */
@@ -35,9 +33,9 @@ return \$__contents;
 EOL;
     }
 
-    protected function compileStatement(string $name, string $parameters, LoaderInterface $loader, CompilerContext $context): string
+    protected function compileStatement(string $name, string $parameters, CompilerContext $context): string
     {
-        $statement = parent::compileStatement($name, $parameters, $loader, $context);
+        $statement = parent::compileStatement($name, $parameters, $context);
         return $statement . "\n";
     }
 

@@ -4,43 +4,47 @@ declare(strict_types=1);
 
 namespace Emonkak\Sharp\Compiler;
 
+use Emonkak\Sharp\Loader\LoaderInterface;
+
 class CompilerContext
 {
+    private LoaderInterface $loader;
+
     /**
      * @var string[]
      */
-    private array $parents = [];
+    private array $ancestors = [];
 
     /**
      * @var array<string, string>
      */
     private array $partials = [];
 
-    public function getPartial(string $name): string
+    public function __construct(LoaderInterface $loader)
     {
-        return $this->partials[$name];
+        $this->loader = $loader;
+    }
+
+    public function loadPartial(string $path, CompilerInterface $compiler): string
+    {
+        if (!isset($this->partials[$path])) {
+            $templateString = $this->loader->load($path);
+            $body = $compiler->compileBody($templateString, $this);
+            $this->partials[$path] = $body;
+        }
+        return $this->partials[$path];
     }
 
     /**
      * @return string[]
      */
-    public function getParents(): array
+    public function getAncestors(): array
     {
-        return $this->parents;
-    }
-
-    public function hasPartial(string $name): bool
-    {
-        return isset($this->partials[$name]);
+        return $this->ancestors;
     }
 
     public function appendParent(string $parent): void
     {
-        $this->parents[] = $parent;
-    }
-
-    public function addPartial(string $name, string $partial): void
-    {
-        $this->partials[$name] = $partial;
+        $this->ancestors[] = $parent;
     }
 }
