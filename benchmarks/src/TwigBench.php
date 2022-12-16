@@ -20,7 +20,7 @@ class TwigBench
     {
         $loader = new FilesystemLoader(__DIR__);
         $this->twig = new Environment($loader, [
-            'cache' => __DIR__ . '/../cache/twig',
+            'cache' => __DIR__ . '/../.cache/twig',
         ]);
     }
 
